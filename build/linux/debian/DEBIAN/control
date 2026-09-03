@@ -1,5 +1,5 @@
-Package: jcp
+Package: redam
 Description: Relational Database Management
-Version: 0.1.0
+Version: 0.1.1
 Maintainer: Andreas Knollmann
 Architecture: all
