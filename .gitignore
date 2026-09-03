@@ -1,0 +1,9 @@
+/.idea
+/.phpunit.result.cache
+/.php-cs-fixer.cache
+/.vagrant
+/.vscode
+/env.ini
+/shared
+/storage
+/vendor

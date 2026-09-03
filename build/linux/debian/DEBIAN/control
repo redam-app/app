@@ -1,0 +1,5 @@
+Package: jcp
+Description: Relational Database Management
+Version: 0.1.0
+Maintainer: Andreas Knollmann
+Architecture: all

@@ -1,0 +1,85 @@
+{
+    "require": [
+        "{{{fewedev}}}/ssh.json"
+    ],
+    "system": {
+        "serverNames": [
+            "app",
+            "mysql57",
+            "mysql80",
+            "mariadb103",
+            "mariadb106",
+            "mariadb1011",
+            "mariadb114"
+        ],
+        "bashServer": "app"
+    },
+    "global": {
+        "systemName": "redam"
+    },
+    "app": {
+        "imageName": "fewedev/cli",
+        "imageTag": "8.3",
+        "containerVolumes": [
+            "{configPath}:/var/www/redam:me:w"
+        ],
+        "bashPath": "/var/www/redam",
+        "bashUser": "me",
+        "sshAccesses": [
+            "me:mysql57:root",
+            "me:mysql80:root",
+            "me:mariadb103:root",
+            "me:mariadb106:root",
+            "me:mariadb1011:root",
+            "me:mariadb114:root"
+        ]
+    },
+    "mysql57": {
+        "imageName": "fewedev/mysql",
+        "imageTag": "5.7",
+        "bashUser": "root",
+        "containerPorts": [
+            "3306:3306"
+        ]
+    },
+    "mysql80": {
+        "imageName": "fewedev/mysql",
+        "imageTag": "8.0",
+        "bashUser": "root",
+        "containerPorts": [
+            "3307:3306"
+        ]
+    },
+    "mariadb103": {
+        "imageName": "fewedev/mariadb",
+        "imageTag": "10.3",
+        "bashUser": "root",
+        "containerPorts": [
+            "3308:3306"
+        ]
+    },
+    "mariadb106": {
+        "imageName": "fewedev/mariadb",
+        "imageTag": "10.6",
+        "bashUser": "root",
+        "containerPorts": [
+            "3309:3306"
+        ]
+    },
+    "mariadb1011": {
+        "imageName": "fewedev/mariadb",
+        "imageTag": "10.11",
+        "bashUser": "root",
+        "containerPorts": [
+            "3310:3306"
+        ]
+    },
+    "mariadb114": {
+        "imageName": "fewedev/mariadb",
+        "imageTag": "11.4",
+        "bashUser": "root",
+        "containerPorts": [
+            "3311:3306"
+        ]
+    }
+}
