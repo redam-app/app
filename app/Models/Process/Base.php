@@ -11,6 +11,7 @@ use App\Models\Command\Local;
 use App\Models\Command\Remote;
 use App\Models\Command\SSH;
 use App\Models\Config;
+use App\Models\Path;
 use FeWeDev\Base\Arrays;
 use FeWeDev\Base\Variables;
 use Illuminate\Contracts\Foundation\Application;
@@ -30,6 +31,7 @@ abstract class Base
         protected Arrays $arrays,
         protected Config $config,
         protected Application $app,
+        protected Path $path,
         protected Local $local,
         protected Remote $remote,
         protected SSH $ssh
@@ -534,7 +536,7 @@ abstract class Base
 
         $shellFullPath = sprintf(
             '%s%s%s%s%s',
-            base_path(),
+            $this->path->getBasePath(),
             DIRECTORY_SEPARATOR,
             'scripts',
             DIRECTORY_SEPARATOR,

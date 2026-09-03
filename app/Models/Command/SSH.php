@@ -6,6 +6,7 @@ namespace App\Models\Command;
 
 use App\Exceptions\ScriptException;
 use App\Models\Config;
+use App\Models\Path;
 use FeWeDev\Base\Arrays;
 use FeWeDev\Base\Variables;
 use phpseclib3\Crypt\Common\PrivateKey;
@@ -21,7 +22,12 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class SSH extends Base
 {
-    public function __construct(protected Variables $variables, protected Arrays $arrays, protected Config $config) {}
+    public function __construct(
+        protected Variables $variables,
+        protected Arrays $arrays,
+        protected Config $config,
+        protected Path $path
+    ) {}
 
     /**
      * @param array<string, array<int, string>|bool|string> $parameters
@@ -43,7 +49,7 @@ class SSH extends Base
 
         $parameterScriptPath = sprintf(
             '%s%s%s%s%s%s%s',
-            base_path(),
+            $this->path->getBasePath(),
             DIRECTORY_SEPARATOR,
             'scripts',
             DIRECTORY_SEPARATOR,
