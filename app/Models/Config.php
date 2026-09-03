@@ -225,7 +225,7 @@ class Config
 
     private function getFileName(): string
     {
-        return base_path().DIRECTORY_SEPARATOR.self::FILE_NAME;
+        return getcwd().DIRECTORY_SEPARATOR.self::FILE_NAME;
     }
 
     /**
