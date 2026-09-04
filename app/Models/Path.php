@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use FeWeDev\Base\Files;
+use FeWeDev\Base\Variables;
 
 /**
  * @author      Andreas Knollmann
@@ -13,7 +14,7 @@ use FeWeDev\Base\Files;
  */
 class Path
 {
-    public function __construct(protected Files $files) {}
+    public function __construct(protected Files $files, protected Variables $variables) {}
 
     public function getBasePath(): string
     {
@@ -22,7 +23,9 @@ class Path
         if (str_contains($basePath, 'phar://')) {
             $phar = new \Phar($basePath);
 
-            $basePath = sprintf('/tmp/redam/%s', app()->version());
+            $tempDir = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR);
+
+            $basePath = sprintf('%s%sredam%s%s', $tempDir, DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, app()->version());
 
             if (!file_exists($basePath)) {
                 $this->files->createDirectory($basePath, 0755);
@@ -36,7 +39,7 @@ class Path
 
                     if (is_file($filePath)) {
                         unlink($filePath);
-                    } else if (is_dir($filePath) && $file !== '.' && $file !== '..' && $file !== 'scripts') {
+                    } elseif (is_dir($filePath) && '.' !== $file && '..' !== $file && 'scripts' !== $file) {
                         $this->files->removeDirectory($filePath);
                     }
                 }
@@ -47,8 +50,11 @@ class Path
                 $regex = new \RegexIterator($iterator, '/^.+\.sh$/i', \RegexIterator::GET_MATCH);
 
                 foreach ($regex as $file) {
-                    $file = reset($file);
-                    chmod($file, 0755);
+                    if (is_array($file)) {
+                        $file = reset($file);
+                    }
+
+                    chmod($this->variables->stringValue($file), 0755);
                 }
             }
         }
