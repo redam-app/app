@@ -3,5 +3,6 @@
     "repository": "fewe-dev/php-bin",
     "src": "build/redam.phar",
     "dest": "build",
-    "php": "8.3"
+    "php": "8.3",
+    "ini": "phpacker.ini"
 }

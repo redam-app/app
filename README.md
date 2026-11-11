@@ -30,6 +30,16 @@ curl -sLO https://raw.githubusercontent.com/redam-app/app/refs/tags/1.0.0/build/
 
 ## Development
 
+### CS-Fixer ###
+```bash
+composer fix
+```
+
+### PHPStan ###
+```bash
+composer ps
+```
+
 ### Phar ###
 
 **Install**
@@ -38,7 +48,7 @@ composer global require humbug/box
 ```
 **Compile**
 ```bash
-~/.config/composer/vendor/bin/box compile
+composer phar
 ```
 
 ### Binary ###
@@ -49,12 +59,12 @@ composer global require phpacker/phpacker
 ```
 **Compile**
 ```bash
-~/.config/composer/vendor/bin/phpacker build all --src=./build/redam.phar --dest=./build/
+composer bin
 ```
 
 ### Debian package ###
 
 **Compile**
 ```bash
-cd build/linux && mkdir -p debian/usr/bin && cp linux-x64 debian/usr/bin/redam && dpkg-deb --build debian redam.deb && rm -rf debian/usr && cd ../..
+composer deb
 ```
