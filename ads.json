@@ -32,6 +32,10 @@
             "me:mariadb106:root",
             "me:mariadb1011:root",
             "me:mariadb114:root"
+        ],
+        "postContainerInstallDockerScript": "{configPath}/docker/dev/install-post.sh",
+        "postContainerInstallDockerParameters": [
+            "-appPath /var/www/redam"
         ]
     },
     "mysql57": {
