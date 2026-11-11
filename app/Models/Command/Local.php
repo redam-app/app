@@ -22,13 +22,13 @@ class Local extends Base
     public function run(
         OutputInterface $output,
         string $serverName,
-        string $scriptPath,
+        string $command,
         array $parameters,
         array $fileUploadParameters,
         array $fileDownloadParameters,
         bool $isQuiet
     ): string {
-        $command = $this->completeCommand($scriptPath, $parameters);
+        $command = $this->completeCommand($command, $parameters);
 
         if (!$isQuiet) {
             $output->writeln(sprintf('Executing: %s', $command));
@@ -37,7 +37,7 @@ class Local extends Base
         [$exitCode, $scriptOutput] = $this->process($command, $isQuiet);
 
         if (0 !== $exitCode) {
-            throw new ScriptException(sprintf('Error while executing script: %s', $scriptPath));
+            throw new ScriptException(sprintf('Error while executing script: %s', $command));
         }
 
         if (!is_string($scriptOutput)) {

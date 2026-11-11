@@ -7,12 +7,12 @@ namespace App\Models\Command;
 use App\Exceptions\ScriptException;
 use App\Models\Config;
 use App\Models\Path;
+use App\Models\Ssh\Connection;
+use App\Models\Ssh\PrivateKey\PrivateKeyLoader;
+use App\Models\Ssh\SshException;
 use FeWeDev\Base\Arrays;
 use FeWeDev\Base\Variables;
-use phpseclib3\Crypt\Common\PrivateKey;
-use phpseclib3\Crypt\PublicKeyLoader;
-use phpseclib3\Net\SCP;
-use phpseclib3\System\SSH\Agent;
+use Random\RandomException;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -37,13 +37,17 @@ class SSH extends Base
     public function run(
         OutputInterface $output,
         string $serverName,
-        string $scriptPath,
+        string $command,
         array $parameters,
         array $fileUploadParameters,
         array $fileDownloadParameters,
         bool $isQuiet
     ): string {
-        $scp = $this->getScp($serverName);
+        try {
+            $connection = $this->getConnection($serverName);
+        } catch (RandomException|\SodiumException $exception) {
+            throw new ScriptException(sprintf('Could not connect to SSH because: %s', $exception->getMessage()));
+        }
 
         $shell = $this->config->requiredValue($serverName, 'shell');
 
@@ -72,7 +76,7 @@ class SSH extends Base
 
         $this->copyFileToHost(
             $output,
-            $scp,
+            $connection,
             $host,
             $port,
             $user,
@@ -83,12 +87,12 @@ class SSH extends Base
 
         $this->copyFileToHost(
             $output,
-            $scp,
+            $connection,
             $host,
             $port,
             $user,
-            $scriptPath,
-            basename($scriptPath),
+            $command,
+            basename($command),
             true
         );
 
@@ -101,7 +105,7 @@ class SSH extends Base
                 if (file_exists($file)) {
                     $this->copyFileToHost(
                         $output,
-                        $scp,
+                        $connection,
                         $host,
                         $port,
                         $user,
@@ -128,7 +132,7 @@ class SSH extends Base
             }
         }
 
-        $command = $this->completeCommand(sprintf('./%s', basename($scriptPath)), $parameters);
+        $command = $this->completeCommand(sprintf('./%s', basename($command)), $parameters);
 
         if (!$isQuiet) {
             $output->writeln($command);
@@ -136,25 +140,27 @@ class SSH extends Base
 
         $completeOutput = '';
 
-        $scp->setTimeout(0);
+        try {
+            $connection->exec(
+                "{$command} 2>&1 ; echo Exit status: $?",
+                function (string $chunk) use (&$completeOutput, $isQuiet): void {
+                    if (!$isQuiet) {
+                        echo $chunk;
+                    }
 
-        $scp->exec(
-            "{$command} 2>&1 ; echo Exit status: $?",
-            function (string $output) use (&$completeOutput, $isQuiet): void {
-                if (!$isQuiet) {
-                    echo $output;
+                    $completeOutput .= $chunk;
                 }
-
-                $completeOutput .= $output;
-            }
-        );
+            );
+        } catch (RandomException $exception) {
+            throw new ScriptException(sprintf('Invalid script output: %s', $exception->getMessage()));
+        }
 
         $completeOutput = rtrim($completeOutput, "\n");
 
         [$exitCode, $scriptOutput] = $this->processResult($completeOutput);
 
         if (0 !== $exitCode) {
-            throw new ScriptException(sprintf('Error while executing script: %s', $scriptPath));
+            throw new ScriptException(sprintf('Error while executing script: %s', $command));
         }
 
         if (!is_string($scriptOutput)) {
@@ -164,7 +170,7 @@ class SSH extends Base
         foreach ($fileDownloads as $remoteFileName => $localFileName) {
             $this->copyFileFromHost(
                 $output,
-                $scp,
+                $connection,
                 $host,
                 $port,
                 $user,
@@ -183,9 +189,15 @@ class SSH extends Base
         string $localFileName,
         bool $isQuiet
     ): void {
+        try {
+            $connection = $this->getConnection($serverName);
+        } catch (RandomException|\SodiumException $exception) {
+            throw new ScriptException(sprintf('Could not connect to SSH because: %s', $exception->getMessage()));
+        }
+
         $this->copyFileFromHost(
             $output,
-            $this->getScp($serverName),
+            $connection,
             $this->getHost($serverName),
             $this->getPort($serverName),
             $this->getUser($serverName),
@@ -201,9 +213,15 @@ class SSH extends Base
         string $serverFileName,
         bool $isQuiet
     ): void {
+        try {
+            $connection = $this->getConnection($serverName);
+        } catch (RandomException|\SodiumException $exception) {
+            throw new ScriptException(sprintf('Could not connect to SSH because: %s', $exception->getMessage()));
+        }
+
         $this->copyFileToHost(
             $output,
-            $this->getScp($serverName),
+            $connection,
             $this->getHost($serverName),
             $this->getPort($serverName),
             $this->getUser($serverName),
@@ -214,7 +232,12 @@ class SSH extends Base
 
     public function delete(OutputInterface $output, string $serverName, string $serverFileName, bool $isQuiet): void
     {
-        $scp = $this->getScp($serverName);
+        try {
+            $connection = $this->getConnection($serverName);
+        } catch (RandomException|\SodiumException $exception) {
+            throw new ScriptException(sprintf('Could not connect to SSH because: %s', $exception->getMessage()));
+        }
+
         $host = $this->getHost($serverName);
         $user = $this->getUser($serverName);
 
@@ -222,59 +245,75 @@ class SSH extends Base
             $output->writeln(sprintf('Deleting file at: %s@%s:%s', $user, $host, $serverFileName));
         }
 
-        $scp->exec(sprintf('rm -rf %s', $serverFileName));
+        try {
+            $connection->exec(sprintf('rm -rf %s', $serverFileName), function (string $output): void {});
+        } catch (RandomException $exception) {
+            $output->writeln(
+                sprintf(
+                    'Failed to delete file at: %s@%s:%s because: %s',
+                    $user,
+                    $host,
+                    $serverFileName,
+                    $exception->getMessage()
+                )
+            );
+        }
     }
 
-    private function getScp(string $serverName): SCP
+    /**
+     * @throws RandomException
+     * @throws \SodiumException
+     */
+    private function getConnection(string $serverName): Connection
     {
         $host = $this->getHost($serverName);
         $port = $this->getPort($serverName);
         $user = $this->getUser($serverName);
 
-        $scp = new SCP($host, $port);
+        $connection = new Connection();
+        $connection->connect($host, $port);
 
         $auth = $this->config->requiredValue($serverName, 'auth');
 
-        if ('agent' === $auth) {
-            $agent = new Agent();
+        try {
+            if ('agent' === $auth) {
+                $result = $connection->authenticateWithAgent($user);
+            } elseif ('password' === $auth) {
+                $password = $this->config->requiredValue($serverName, 'password');
 
-            $result = $scp->login($user, $agent);
-        } elseif ('password' === $auth) {
-            $password = $this->config->requiredValue($serverName, 'password');
+                $result = $connection->authenticateWithPassword($user, $password);
+            } elseif ('key' === $auth) {
+                $privateKey = $this->config->requiredValue($serverName, 'privateKey');
 
-            $result = $scp->login($user, $password);
-        } elseif ('key' === $auth) {
-            $privateKey = $this->config->requiredValue($serverName, 'privateKey');
+                $result = $connection->authenticateWithPublicKey($user, PrivateKeyLoader::load($privateKey));
+            } elseif ('file' === $auth) {
+                $privateKeyFile = $this->config->requiredValue($serverName, 'privateKeyFile');
 
-            $key = PublicKeyLoader::load($privateKey);
+                if (!file_exists($privateKeyFile)) {
+                    throw new ScriptException(sprintf('Private key file does not exist: %s', $privateKeyFile));
+                }
 
-            if (!$key instanceof PrivateKey) {
-                throw new ScriptException(sprintf('Invalid private key: %s', $privateKey));
+                $privateKeyContent = file_get_contents($privateKeyFile);
+
+                if (false === $privateKeyContent) {
+                    throw new ScriptException(
+                        sprintf('Private key file could not be loaded from: %s', $privateKeyFile)
+                    );
+                }
+
+                $result = $connection->authenticateWithPublicKey(
+                    $user,
+                    PrivateKeyLoader::load($privateKeyContent)
+                );
+            } else {
+                throw new ScriptException(sprintf('Unsupported authentication method: %s', $auth));
             }
-
-            $result = $scp->login($user, $key);
-        } elseif ('file' === $auth) {
-            $privateKeyFile = $this->config->requiredValue($serverName, 'privateKeyFile');
-
-            if (!file_exists($privateKeyFile)) {
-                throw new ScriptException(sprintf('Private key file does not exist: %s', $privateKeyFile));
-            }
-
-            $privateKeyContent = file_get_contents($privateKeyFile);
-
-            if (false === $privateKeyContent) {
-                throw new ScriptException(sprintf('Private key file could not be loaded from: %s', $privateKeyFile));
-            }
-
-            $key = PublicKeyLoader::load($privateKeyContent);
-
-            if (!$key instanceof PrivateKey) {
-                throw new ScriptException(sprintf('Invalid private key file: %s', $privateKeyFile));
-            }
-
-            $result = $scp->login($user, $key);
-        } else {
-            throw new ScriptException(sprintf('Unsupported authentication method: %s', $auth));
+        } catch (SshException $exception) {
+            throw new ScriptException(
+                sprintf('Could not connect via SSH to host: %s and port: %d.', $host, $port),
+                0,
+                $exception
+            );
         }
 
         if (false === $result) {
@@ -283,7 +322,7 @@ class SSH extends Base
             );
         }
 
-        return $scp;
+        return $connection;
     }
 
     private function getHost(string $serverName): string
@@ -303,7 +342,7 @@ class SSH extends Base
 
     private function copyFileToHost(
         OutputInterface $output,
-        SCP $scp,
+        Connection $connection,
         string $host,
         int $port,
         string $user,
@@ -317,22 +356,32 @@ class SSH extends Base
 
         $output->writeln(sprintf('Copying file from: %s to: %s@%s:%s', $filePath, $user, $host, $remoteFileName));
 
-        $result = $scp->put($remoteFileName, $filePath, SCP::SOURCE_LOCAL_FILE);
-
-        if (false === $result) {
+        try {
+            $connection->scp()->upload($filePath, $remoteFileName);
+        } catch (RandomException|SshException $exception) {
             throw new ScriptException(
-                sprintf('Could not copy file: %s to SSH host: %s and port: %d.', $filePath, $host, $port)
+                sprintf('Could not copy file: %s to SSH host: %s and port: %d.', $filePath, $host, $port),
+                0,
+                $exception
             );
         }
 
         if ($isExecutable) {
-            $scp->exec(sprintf('chmod +x %s', $remoteFileName));
+            try {
+                $connection->exec(sprintf('chmod +x %s', $remoteFileName), function (string $output): void {});
+            } catch (RandomException $exception) {
+                throw new ScriptException(
+                    sprintf('Could not chmod file: %s on SSH host: %s and port: %d.', $remoteFileName, $host, $port),
+                    0,
+                    $exception
+                );
+            }
         }
     }
 
     private function copyFileFromHost(
         OutputInterface $output,
-        SCP $scp,
+        Connection $connection,
         string $host,
         int $port,
         string $user,
@@ -341,14 +390,24 @@ class SSH extends Base
     ): void {
         $output->writeln(sprintf('Copying file from: %s@%s:%s to: %s', $user, $host, $remoteFileName, $filePath));
 
-        $result = $scp->get($remoteFileName, $filePath);
-
-        if (false === $result) {
+        try {
+            $connection->scp()->download($remoteFileName, $filePath);
+        } catch (RandomException|SshException $exception) {
             throw new ScriptException(
-                sprintf('Could not copy file: %s from SSH host: %s and port: %d.', $remoteFileName, $host, $port)
+                sprintf('Could not copy file: %s from SSH host: %s and port: %d.', $remoteFileName, $host, $port),
+                0,
+                $exception
             );
         }
 
-        $scp->exec(sprintf('chmod +x %s', $remoteFileName));
+        try {
+            $connection->exec(sprintf('chmod +x %s', $remoteFileName), function (string $output): void {});
+        } catch (RandomException $exception) {
+            throw new ScriptException(
+                sprintf('Could not chmod file: %s on SSH host: %s and port: %d.', $remoteFileName, $host, $port),
+                0,
+                $exception
+            );
+        }
     }
 }

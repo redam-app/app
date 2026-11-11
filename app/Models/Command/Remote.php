@@ -22,7 +22,7 @@ class Remote extends Local
     public function run(
         OutputInterface $output,
         string $serverName,
-        string $scriptPath,
+        string $command,
         array $parameters,
         array $fileUploadParameters,
         array $fileDownloadParameters,
@@ -33,7 +33,7 @@ class Remote extends Local
         return parent::run(
             $output,
             $serverName,
-            $scriptPath,
+            $command,
             $parameters,
             $fileUploadParameters,
             $fileDownloadParameters,

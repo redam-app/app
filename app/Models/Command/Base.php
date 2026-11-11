@@ -21,7 +21,7 @@ abstract class Base
     abstract public function run(
         OutputInterface $output,
         string $serverName,
-        string $scriptPath,
+        string $command,
         array $parameters,
         array $fileUploadParameters,
         array $fileDownloadParameters,
