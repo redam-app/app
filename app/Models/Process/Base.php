@@ -43,18 +43,12 @@ abstract class Base
             $serverList = $this->getServerList();
 
             foreach ($serverList as $server) {
-                $serverType = $this->config->requiredValue(
-                    $server,
-                    'type'
-                );
+                $serverType = $this->config->requiredValue($server, 'type');
 
                 if ('local' === $serverType && ('localhost' === $host || '127.0.0.1' === $host)) {
                     $serverName = $server;
                 } elseif ('local' !== $serverType) {
-                    $serverHost = $this->config->requiredValue(
-                        $server,
-                        'host'
-                    );
+                    $serverHost = $this->config->requiredValue($server, 'host');
 
                     if ($serverHost === $host) {
                         $serverName = $server;
@@ -64,12 +58,7 @@ abstract class Base
         }
 
         if ($this->variables->isEmpty($serverName) && $isRequired) {
-            throw new ServerNotFoundException(
-                sprintf(
-                    'No server found for host: %s',
-                    $host
-                )
-            );
+            throw new ServerNotFoundException(sprintf('No server found for host: %s', $host));
         }
 
         return $serverName;
@@ -80,11 +69,7 @@ abstract class Base
      */
     protected function getServerList(): array
     {
-        $configServerList = $this->config->list(
-            'system',
-            'server',
-            true
-        );
+        $configServerList = $this->config->list('system', 'server', true);
 
         if (0 === count($configServerList)) {
             throw new MissingConfigException('No servers found!');
@@ -124,14 +109,8 @@ abstract class Base
             throw new ScriptException('No components defined');
         }
 
-        if (str_contains(
-            $component,
-            ':'
-        )) {
-            [$componentName, $componentMode] = explode(
-                ':',
-                $component
-            );
+        if (str_contains($component, ':')) {
+            [$componentName, $componentMode] = explode(':', $component);
         } else {
             $componentName = $component;
             $componentMode = 'single';
@@ -141,10 +120,7 @@ abstract class Base
             $serverList = $this->getServerList();
 
             foreach ($serverList as $serverName) {
-                $componentId = $this->config->value(
-                    $serverName,
-                    $componentName
-                );
+                $componentId = $this->config->value($serverName, $componentName);
 
                 if (!$this->variables->isEmpty($componentId)) {
                     $parameters = $this->prepareServerParameters(
@@ -229,26 +205,13 @@ abstract class Base
             }
 
             if (!$hasAny) {
-                throw new ScriptException(
-                    sprintf(
-                        'No servers found for component: %s',
-                        $componentName
-                    )
-                );
+                throw new ScriptException(sprintf('No servers found for component: %s', $componentName));
             }
 
-            return implode(
-                PHP_EOL,
-                $allOutputs
-            );
+            return implode(PHP_EOL, $allOutputs);
         }
 
-        throw new ScriptException(
-            sprintf(
-                'Invalid run component: %s',
-                $component
-            )
-        );
+        throw new ScriptException(sprintf('Invalid run component: %s', $component));
     }
 
     /**
@@ -267,14 +230,8 @@ abstract class Base
             throw new ScriptException('No components defined');
         }
 
-        if (str_contains(
-            $component,
-            ':'
-        )) {
-            [$componentName, $componentMode] = explode(
-                ':',
-                $component
-            );
+        if (str_contains($component, ':')) {
+            [$componentName, $componentMode] = explode(':', $component);
         } else {
             $componentName = $component;
             $componentMode = 'single';
@@ -284,28 +241,13 @@ abstract class Base
             $serverList = $this->getServerList();
 
             foreach ($serverList as $serverName) {
-                $componentId = $this->config->value(
-                    $serverName,
-                    $componentName
-                );
+                $componentId = $this->config->value($serverName, $componentName);
 
                 if (!$this->variables->isEmpty($componentId)) {
                     if (count($components) > 0) {
-                        $this->download(
-                            $output,
-                            $serverFileName,
-                            $localFileName,
-                            $components,
-                            $isQuiet
-                        );
+                        $this->download($output, $serverFileName, $localFileName, $components, $isQuiet);
                     } else {
-                        $this->executeDownload(
-                            $output,
-                            $serverName,
-                            $serverFileName,
-                            $localFileName,
-                            $isQuiet
-                        );
+                        $this->executeDownload($output, $serverName, $serverFileName, $localFileName, $isQuiet);
                     }
 
                     return;
@@ -317,51 +259,26 @@ abstract class Base
             $hasAny = false;
 
             foreach ($serverList as $serverName) {
-                $componentId = $this->config->value(
-                    $serverName,
-                    $componentName
-                );
+                $componentId = $this->config->value($serverName, $componentName);
 
                 if (!$this->variables->isEmpty($componentId)) {
                     $hasAny = true;
 
                     if (count($components) > 0) {
-                        $this->download(
-                            $output,
-                            $serverFileName,
-                            $localFileName,
-                            $components,
-                            $isQuiet
-                        );
+                        $this->download($output, $serverFileName, $localFileName, $components, $isQuiet);
 
                         return;
                     }
 
-                    $this->executeDownload(
-                        $output,
-                        $serverName,
-                        $serverFileName,
-                        $localFileName,
-                        $isQuiet
-                    );
+                    $this->executeDownload($output, $serverName, $serverFileName, $localFileName, $isQuiet);
                 }
             }
 
             if (!$hasAny) {
-                throw new ScriptException(
-                    sprintf(
-                        'No servers found for component: %s',
-                        $componentName
-                    )
-                );
+                throw new ScriptException(sprintf('No servers found for component: %s', $componentName));
             }
         } else {
-            throw new ScriptException(
-                sprintf(
-                    'Invalid download component: %s',
-                    $component
-                )
-            );
+            throw new ScriptException(sprintf('Invalid download component: %s', $component));
         }
     }
 
@@ -381,14 +298,8 @@ abstract class Base
             throw new ScriptException('No components defined');
         }
 
-        if (str_contains(
-            $component,
-            ':'
-        )) {
-            [$componentName, $componentMode] = explode(
-                ':',
-                $component
-            );
+        if (str_contains($component, ':')) {
+            [$componentName, $componentMode] = explode(':', $component);
         } else {
             $componentName = $component;
             $componentMode = 'single';
@@ -398,28 +309,13 @@ abstract class Base
             $serverList = $this->getServerList();
 
             foreach ($serverList as $serverName) {
-                $componentId = $this->config->value(
-                    $serverName,
-                    $componentName
-                );
+                $componentId = $this->config->value($serverName, $componentName);
 
                 if (!$this->variables->isEmpty($componentId)) {
                     if (count($components) > 0) {
-                        $this->upload(
-                            $output,
-                            $localFileName,
-                            $serverFileName,
-                            $components,
-                            $isQuiet
-                        );
+                        $this->upload($output, $localFileName, $serverFileName, $components, $isQuiet);
                     } else {
-                        $this->executeUpload(
-                            $output,
-                            $serverName,
-                            $localFileName,
-                            $serverFileName,
-                            $isQuiet
-                        );
+                        $this->executeUpload($output, $serverName, $localFileName, $serverFileName, $isQuiet);
                     }
 
                     return;
@@ -431,50 +327,26 @@ abstract class Base
             $hasAny = false;
 
             foreach ($serverList as $serverName) {
-                $componentId = $this->config->value(
-                    $serverName,
-                    $componentName
-                );
+                $componentId = $this->config->value($serverName, $componentName);
 
                 if (!$this->variables->isEmpty($componentId)) {
                     $hasAny = true;
 
                     if (count($components) > 0) {
-                        $this->upload(
-                            $output,
-                            $localFileName,
-                            $serverFileName,
-                            $components,
-                            $isQuiet
-                        );
+                        $this->upload($output, $localFileName, $serverFileName, $components, $isQuiet);
 
                         return;
                     }
-                    $this->executeUpload(
-                        $output,
-                        $serverName,
-                        $localFileName,
-                        $serverFileName,
-                        $isQuiet
-                    );
+
+                    $this->executeUpload($output, $serverName, $localFileName, $serverFileName, $isQuiet);
                 }
             }
 
             if (!$hasAny) {
-                throw new ScriptException(
-                    sprintf(
-                        'No servers found for component: %s',
-                        $componentName
-                    )
-                );
+                throw new ScriptException(sprintf('No servers found for component: %s', $componentName));
             }
         } else {
-            throw new ScriptException(
-                sprintf(
-                    'Invalid download component: %s',
-                    $component
-                )
-            );
+            throw new ScriptException(sprintf('Invalid download component: %s', $component));
         }
     }
 
@@ -489,27 +361,16 @@ abstract class Base
         string $componentId,
         array $parameters
     ): array {
-        $bindingId = sprintf(
-            'process.parameters.%s',
-            $componentName
-        );
+        $bindingId = sprintf('process.parameters.%s', $componentName);
 
         if ($this->app->has($bindingId)) {
             try {
                 /** @var Parameter\Base $componentParameters */
                 $componentParameters = $this->app->get($bindingId);
 
-                return $componentParameters->execute(
-                    $serverName,
-                    $componentId,
-                    $parameters
-                );
+                return $componentParameters->execute($serverName, $componentId, $parameters);
             } catch (ContainerExceptionInterface $exception) {
-                throw new ScriptException(
-                    $exception->getMessage(),
-                    Command::FAILURE,
-                    $exception
-                );
+                throw new ScriptException($exception->getMessage(), Command::FAILURE, $exception);
             }
         }
 
@@ -564,31 +425,19 @@ abstract class Base
             if (file_exists($scriptFullPath)) {
                 break;
             }
+
             $scriptFullPath = null;
         }
 
         if (null === $scriptFullPath) {
-            $scriptFullPath = sprintf(
-                '%s%s%s',
-                $shellFullPath,
-                DIRECTORY_SEPARATOR,
-                $scriptName
-            );
+            $scriptFullPath = sprintf('%s%s%s', $shellFullPath, DIRECTORY_SEPARATOR, $scriptName);
 
             if (!file_exists($scriptFullPath)) {
-                throw new ScriptException(
-                    sprintf(
-                        'Script not found: %s',
-                        $scriptFullPath
-                    )
-                );
+                throw new ScriptException(sprintf('Script not found: %s', $scriptFullPath));
             }
         }
 
-        $serverType = $this->config->requiredValue(
-            $serverName,
-            'type'
-        );
+        $serverType = $this->config->requiredValue($serverName, 'type');
 
         if ('local' === $serverType) {
             $scriptOutput = $this->local->run(
@@ -621,12 +470,7 @@ abstract class Base
                 $isQuiet
             );
         } else {
-            throw new ScriptException(
-                sprintf(
-                    'Unsupported server type: %s',
-                    $serverType
-                )
-            );
+            throw new ScriptException(sprintf('Unsupported server type: %s', $serverType));
         }
 
         return $scriptOutput;
@@ -639,42 +483,16 @@ abstract class Base
         string $localFileName,
         bool $isQuiet
     ): void {
-        $serverType = $this->config->requiredValue(
-            $serverName,
-            'type'
-        );
+        $serverType = $this->config->requiredValue($serverName, 'type');
 
         if ('local' === $serverType) {
-            $this->local->download(
-                $output,
-                $serverName,
-                $serverFileName,
-                $localFileName,
-                $isQuiet
-            );
+            $this->local->download($output, $serverName, $serverFileName, $localFileName, $isQuiet);
         } elseif ('remote' === $serverType) {
-            $this->remote->download(
-                $output,
-                $serverName,
-                $serverFileName,
-                $localFileName,
-                $isQuiet
-            );
+            $this->remote->download($output, $serverName, $serverFileName, $localFileName, $isQuiet);
         } elseif ('ssh' === $serverType) {
-            $this->ssh->download(
-                $output,
-                $serverName,
-                $serverFileName,
-                $localFileName,
-                $isQuiet
-            );
+            $this->ssh->download($output, $serverName, $serverFileName, $localFileName, $isQuiet);
         } else {
-            throw new ScriptException(
-                sprintf(
-                    'Unsupported server type: %s',
-                    $serverType
-                )
-            );
+            throw new ScriptException(sprintf('Unsupported server type: %s', $serverType));
         }
     }
 
@@ -685,42 +503,16 @@ abstract class Base
         string $serverFileName,
         bool $isQuiet
     ): void {
-        $serverType = $this->config->requiredValue(
-            $serverName,
-            'type'
-        );
+        $serverType = $this->config->requiredValue($serverName, 'type');
 
         if ('local' === $serverType) {
-            $this->local->upload(
-                $output,
-                $serverName,
-                $localFileName,
-                $serverFileName,
-                $isQuiet
-            );
+            $this->local->upload($output, $serverName, $localFileName, $serverFileName, $isQuiet);
         } elseif ('remote' === $serverType) {
-            $this->remote->upload(
-                $output,
-                $serverName,
-                $localFileName,
-                $serverFileName,
-                $isQuiet
-            );
+            $this->remote->upload($output, $serverName, $localFileName, $serverFileName, $isQuiet);
         } elseif ('ssh' === $serverType) {
-            $this->ssh->upload(
-                $output,
-                $serverName,
-                $localFileName,
-                $serverFileName,
-                $isQuiet
-            );
+            $this->ssh->upload($output, $serverName, $localFileName, $serverFileName, $isQuiet);
         } else {
-            throw new ScriptException(
-                sprintf(
-                    'Unsupported server type: %s',
-                    $serverType
-                )
-            );
+            throw new ScriptException(sprintf('Unsupported server type: %s', $serverType));
         }
     }
 }
