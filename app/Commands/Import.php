@@ -11,7 +11,7 @@ use Illuminate\Contracts\Container\BindingResolutionException;
  * @copyright   2014-2026 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class Import extends Base
+class Import extends Server
 {
     protected function getCommandName(): string
     {
@@ -23,7 +23,7 @@ class Import extends Base
         return 'Import a dump file';
     }
 
-    protected function getCommandParameters(): array
+    protected function getServerCommandParameters(): array
     {
         return [
             $this->prepareInputOption('file', 'Import file'),
@@ -34,9 +34,11 @@ class Import extends Base
     }
 
     /**
+     * @param array<int, string> $servers
+     *
      * @throws BindingResolutionException
      */
-    protected function executeCommand(): int
+    protected function executeServerCommand(array $servers): int
     {
         $file = $this->getRequiredOption('file', 'No import file specified!');
         $reset = $this->getFlag('reset');
@@ -47,6 +49,7 @@ class Import extends Base
 
         $process->execute(
             $this->getOutput(),
+            $servers,
             $file,
             $reset,
             $tempDir,

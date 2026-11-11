@@ -13,19 +13,25 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class Export extends Base
 {
+    /**
+     * @param array<int, string> $servers
+     */
     public function execute(
         OutputInterface $output,
+        array $servers,
         string $file,
         string $tempDir,
         bool $onlyColumns,
         bool $onlyRecords,
         bool $removeDatabase
     ): void {
+        $databaseServer = sprintf('database:%s', count($servers) > 0 ? implode(',', $servers) : 'all');
+
         $this->run(
             $output,
             'export.sh',
             ['databaseType', 'databaseVersion'],
-            ['database:all'],
+            [$databaseServer],
             [
                 'file' => $file,
                 'tempDir' => $tempDir,

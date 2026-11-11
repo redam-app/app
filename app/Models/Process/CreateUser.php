@@ -13,19 +13,25 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class CreateUser extends Base
 {
+    /**
+     * @param array<int, string> $servers
+     */
     public function execute(
         OutputInterface $output,
+        array $servers,
         string $rootUser,
         string $rootPassword,
         bool $super,
         bool $grant,
         bool $initial
     ): void {
+        $databaseServer = sprintf('database:%s', count($servers) > 0 ? implode(',', $servers) : 'all');
+
         $this->run(
             $output,
             'create-user.sh',
             ['databaseType', 'databaseVersion'],
-            ['database:all'],
+            [$databaseServer],
             [
                 'databaseRootUser' => $rootUser,
                 'databaseRootPassword' => $rootPassword,
@@ -37,7 +43,7 @@ class CreateUser extends Base
                 $output,
                 'grant-user.sh',
                 ['databaseType', 'databaseVersion'],
-                ['database:all'],
+                [$databaseServer],
                 [
                     'databaseRootUser' => $rootUser,
                     'databaseRootPassword' => $rootPassword,
@@ -50,7 +56,7 @@ class CreateUser extends Base
                 $output,
                 'grant-super.sh',
                 ['databaseType', 'databaseVersion'],
-                ['database:all'],
+                [$databaseServer],
                 [
                     'databaseRootUser' => $rootUser,
                     'databaseRootPassword' => $rootPassword,
@@ -63,7 +69,7 @@ class CreateUser extends Base
                 $output,
                 'create-database.sh',
                 ['databaseType', 'databaseVersion'],
-                ['database:all'],
+                [$databaseServer],
                 []
             );
         }

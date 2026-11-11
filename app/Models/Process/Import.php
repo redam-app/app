@@ -13,18 +13,24 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class Import extends Base
 {
+    /**
+     * @param array<int, string> $servers
+     */
     public function execute(
         OutputInterface $output,
+        array $servers,
         string $file,
         bool $reset,
         string $tempDir,
         bool $remove
     ): void {
+        $databaseServer = sprintf('database:%s', count($servers) > 0 ? implode(',', $servers) : 'all');
+
         $this->run(
             $output,
             'import.sh',
             ['databaseType', 'databaseVersion'],
-            ['database:all'],
+            [$databaseServer],
             [
                 'file' => $file,
                 'reset' => $reset,

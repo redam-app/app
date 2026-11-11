@@ -11,7 +11,7 @@ use Illuminate\Contracts\Container\BindingResolutionException;
  * @copyright   2014-2026 Softwareentwicklung Andreas Knollmann
  * @license     http://www.opensource.org/licenses/mit-license.php MIT
  */
-class CreateUser extends Base
+class CreateUser extends Server
 {
     protected function getCommandName(): string
     {
@@ -23,7 +23,7 @@ class CreateUser extends Base
         return 'Create a new user';
     }
 
-    protected function getCommandParameters(): array
+    protected function getServerCommandParameters(): array
     {
         return [
             $this->prepareDefaultInputOption('rootUser', 'root', 'Name of root user'),
@@ -38,9 +38,11 @@ class CreateUser extends Base
     }
 
     /**
+     * @param array<int, string> $servers
+     *
      * @throws BindingResolutionException
      */
-    protected function executeCommand(): int
+    protected function executeServerCommand(array $servers): int
     {
         $rootUser = $this->getRequiredOption('rootUser', 'No root user specified!');
         $rootPassword = $this->getRequiredOption('rootPassword', 'No root password specified!');
@@ -52,6 +54,7 @@ class CreateUser extends Base
 
         $process->execute(
             $this->getOutput(),
+            $servers,
             $rootUser,
             $rootPassword,
             $super,
