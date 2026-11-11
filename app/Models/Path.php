@@ -27,7 +27,9 @@ class Path
 
             $basePath = sprintf('%s%sredam%s%s', $tempDir, DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR, app()->version());
 
-            if (!file_exists($basePath)) {
+            $scriptsPath = sprintf('%s%s%s', $basePath, DIRECTORY_SEPARATOR, 'scripts');
+
+            if (!file_exists($scriptsPath)) {
                 $this->files->createDirectory($basePath, 0755);
 
                 $phar->extractTo($basePath);
@@ -44,7 +46,6 @@ class Path
                     }
                 }
 
-                $scriptsPath = sprintf('%s%s%s', $basePath, DIRECTORY_SEPARATOR, 'scripts');
                 $directory = new \RecursiveDirectoryIterator($scriptsPath);
                 $iterator = new \RecursiveIteratorIterator($directory);
                 $regex = new \RegexIterator($iterator, '/^.+\.sh$/i', \RegexIterator::GET_MATCH);
