@@ -62,6 +62,14 @@
     "scripts": {
         "fix": "vendor/bin/php-cs-fixer fix app",
         "cs": "vendor/bin/php-cs-fixer fix app --dry-run --verbose --diff",
-        "ps": "vendor/bin/phpstan analyse"
+        "ps": "vendor/bin/phpstan analyse",
+        "phar": "~/.config/composer/vendor/bin/box compile",
+        "bin": "~/.config/composer/vendor/bin/phpacker build",
+        "deb": "cd build/linux && mkdir -p debian/usr/bin && cp linux-x64 debian/usr/bin/redam && dpkg-deb --build debian redam.deb && rm -rf debian/usr && cd ../..",
+        "build": [
+            "~/.config/composer/vendor/bin/box compile",
+            "~/.config/composer/vendor/bin/phpacker build",
+            "cd build/linux && mkdir -p debian/usr/bin && cp linux-x64 debian/usr/bin/redam && dpkg-deb --build debian redam.deb && rm -rf debian/usr && cd ../.."
+        ]
     }
 }
